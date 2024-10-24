@@ -24,8 +24,14 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Optional<List<Employee>> findAllByIdIn(List<Long> Ids);
     @Modifying
     @Query(value = "UPDATE Employee e SET e.department = :department WHERE e.id = :employeeId")
-    void addEmployeeToDepartment(Long employeeId, Department department);
+    void updateEmployeeDepartment(Long employeeId, Department department);
     @Modifying
     @Query(value = "UPDATE employees e SET e.department_id = :departmentId WHERE e.id = :employeeId", nativeQuery = true)
-    void addEmployeeToDepartmentNative(Long employeeId, Long departmentId);
+    void updateEmployeeDepartmentNative(Long employeeId, Long departmentId);
+    @Modifying
+    @Query(value = "UPDATE Employee e SET e.department = null WHERE e.id = :employeeId")
+    void removeEmployeeFromDepartment(Long employeeId);
+    @Modifying
+    @Query(value = "UPDATE Employee e SET e.department = null WHERE e.id = :employeeId AND e.department.id = :departmentId")
+    int removeEmployeeFromDepartmentIfExists(Long employeeId, Long departmentId);
 }

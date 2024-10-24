@@ -17,6 +17,7 @@ import java.util.List;
 public class DepartmentController {
     private final DepartmentService departmentService;
 
+    //department specific
     @GetMapping()
     public ResponseEntity<List<Department>> getAllDepartments(){
         var departments = departmentService.findAll();
@@ -42,6 +43,8 @@ public class DepartmentController {
         departmentService.deleteDepartment(id);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
+
+    //vklu4wa6ti i employees
     @GetMapping(value = "{id}/employees")
     public ResponseEntity<List<Employee>> getEmployeesFromDepartment(@PathVariable Long id){
         var employees = departmentService.findEmployees(id);

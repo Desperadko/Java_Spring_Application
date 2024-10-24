@@ -55,15 +55,17 @@ public class EmployeeService {
         employee = employeeMapper.convertDtoToEntity(dto, id);
         return employeeRepo.saveAndFlush(employee);
     }
-    public Employee changeDepartment(Long id, Long depId){
-        var employee = employeeRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ID: " + id));
+    public void changeDepartment(Long id, Long depId){
         var department = departmentRepo.findById(depId)
                 .orElseThrow(() -> new EntityNotFoundException("Department ID: " + depId));
 
-        employee.setDepartment(department);
+        employeeRepo.updateEmployeeDepartment(id, department);
+    }
+    public void removeEmployeeFromDepartment(Long id) {
+        var employee = employeeRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("ID: " + id));
 
-        return employeeRepo.saveAndFlush(employee);
+        employee.setDepartment(null);
     }
     public void deleteEmployee(Long id){
         var employee = employeeRepo.findById(id)

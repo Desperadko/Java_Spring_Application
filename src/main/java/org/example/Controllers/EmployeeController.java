@@ -23,8 +23,8 @@ public class EmployeeController {
 
     @GetMapping()
     public ResponseEntity<List<Employee>> getAllEmployees(){
-        var result = employeeService.findAll();
-        return ResponseEntity.ok(result);
+        var employees = employeeService.findAll();
+        return ResponseEntity.ok(employees);
     }
     @GetMapping(value = "/{id}")
     public ResponseEntity<Employee> getEmployeeByID(@PathVariable Long id){
@@ -33,7 +33,7 @@ public class EmployeeController {
     }
     @PostMapping()
     public ResponseEntity<Employee> createEmployee(@RequestBody EmployeeDTO dto){
-        Employee employee = employeeService.saveEmployee(dto);
+        var employee = employeeService.saveEmployee(dto);
         return new ResponseEntity<>(employee, HttpStatus.CREATED);
     }
     @PutMapping(value = "/{id}")
@@ -41,10 +41,15 @@ public class EmployeeController {
         var employee = employeeService.updateEmployeeData(id, dto);
         return new ResponseEntity<>(employee, HttpStatus.ACCEPTED);
     }
-    @PatchMapping(value = "/{id}")
+    @PatchMapping(value = "/{id}/department")
     public ResponseEntity<Employee> changeDepartment(@PathVariable Long id, @RequestParam Long depId){
-        var employee = employeeService.changeDepartment(id, depId);
-        return new ResponseEntity<>(employee, HttpStatus.ACCEPTED);
+        employeeService.changeDepartment(id, depId);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+    @DeleteMapping(value = "/{id}/department")
+    public ResponseEntity<?> removeEmployeeFromDepartment(@PathVariable Long id){
+        employeeService.removeEmployeeFromDepartment(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<Employee> deleteEmployee(@PathVariable Long id){

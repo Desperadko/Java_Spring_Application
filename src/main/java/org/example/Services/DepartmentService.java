@@ -77,36 +77,23 @@ public class DepartmentService {
     }
 
     public void addEmployeeToDepartment(Long departmentId, Long employeeId) {
-//        var department = departmentRepo.findById(departmentId)
-//                .orElseThrow(() -> new EntityNotFoundException("Department ID: " + departmentId));
-//        var employee = employeeRepo.findById(employeeId)
-//                .orElseThrow(() -> new EntityNotFoundException("Employee ID: " + employeeId));
-//
-//        employee.setDepartment(department);
-//
-//        employeeRepo.saveAndFlush(employee);
-
         var department = departmentRepo.findById(departmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Department ID: " + departmentId));
-        employeeRepo.addEmployeeToDepartment(employeeId, department);
+        employeeRepo.updateEmployeeDepartment(employeeId, department);
     }
     public void addEmployeeToDepartmentNative(Long departmentId, Long employeeId){
-        employeeRepo.addEmployeeToDepartmentNative(employeeId, departmentId);
+        employeeRepo.updateEmployeeDepartmentNative(employeeId, departmentId);
     }
 
     public Employee removeEmployeeFromDepartment(Long departmentId, Long employeeId) {
-        var department = departmentRepo.findById(departmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Department ID: " + departmentId));
         var employee = employeeRepo.findById(employeeId)
                 .orElseThrow(() -> new EntityNotFoundException("Employee ID: " + employeeId));
-        var employeesInDepartment = employeeRepo.findEmployeesByDepartment(department)
-                .orElseThrow(() -> new EntityNotFoundException("Employees not found with department ID: " + department.getId()));
 
-        if(!employeesInDepartment.contains(employee))  return null;
+        int updatedRows = employeeRepo.removeEmployeeFromDepartmentIfExists(employeeId, departmentId);
+        if (updatedRows == 0)
+            return null;
 
-        employee.setDepartment(null);
-        employeeRepo.saveAndFlush(employee);
-        return employee;
+        return employeeRepo.saveAndFlush(employee);
     }
 
     public List<Employee> updateEmployeeListForDepartment(Long departmentId, List<Long> employeeList) {
