@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.DTOs.EmployeeDTO;
+import org.example.Entities.Department;
 import org.example.Entities.Employee;
 import org.example.Mappers.EmployeeMapper;
 import org.example.Repositories.DepartmentRepository;
@@ -29,47 +30,49 @@ public class EmployeeService {
     public List<Employee> findAll(){
         return employeeRepo.findAll();
     }
-    public Employee getEmployeeById(Long id){
-        return employeeRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ID: " + id));
+    public Employee getEmployeeById(Long employeeId){
+        return getEmployee(employeeId);
     }
-    public Employee saveEmployee(EmployeeDTO dto){
-        Optional<Employee> dbObject = employeeRepo.findEmployeeByEmployeeNumber(dto.employeeNumber());
+    public Employee addEmployee(EmployeeDTO employeeDTO){
+        var employeeNumber = employeeDTO.employeeNumber();
 
-        Long id;
+        Optional<Employee> dbObject = employeeRepo.findEmployeeByEmployeeNumber(employeeNumber);
         if(dbObject.isPresent()){
-            id = dbObject.get().getId();
+            throw new IllegalStateException("Employee with employee number '" + employeeNumber + "' already exists. " +
+                    "Check if you don't want to UPDATE said employee, otherwise choose another employee number.");
         }
-        else{
-            id = null;
-        }
-        //na celiq goren if ima eqivalent expression
-        //id = dbObject.map(Employee::getId).orElse(null);
 
-        var employee = employeeMapper.convertDtoToEntity(dto, id);
-        return employeeRepo.saveAndFlush(employee);
+        return saveEmployeeDtoToDatabase(employeeDTO, null);
     }
-    public Employee updateEmployeeData(Long id, EmployeeDTO dto){
-        var employee = employeeRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ID: " + id));
-        employee = employeeMapper.convertDtoToEntity(dto, id);
-        return employeeRepo.saveAndFlush(employee);
+    public Employee updateEmployeeData(Long employeeId, EmployeeDTO employeeDTO){
+        if(!employeeRepo.existsById(employeeId))
+            throw new EntityNotFoundException("Employee ID: " + employeeId);
+        return saveEmployeeDtoToDatabase(employeeDTO, employeeId);
     }
-    public void changeDepartment(Long id, Long depId){
-        var department = departmentRepo.findById(depId)
-                .orElseThrow(() -> new EntityNotFoundException("Department ID: " + depId));
+    public void changeDepartment(Long employeeId, Long departmentId){
+        var department = getDepartment(departmentId);
 
-        employeeRepo.updateEmployeeDepartment(id, department);
+        employeeRepo.updateEmployeeDepartment(employeeId, department);
     }
-    public void removeEmployeeFromDepartment(Long id) {
-        var employee = employeeRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ID: " + id));
-
-        employee.setDepartment(null);
+    public void removeEmployeeFromDepartment(Long employeeId) {
+        employeeRepo.removeEmployeeFromDepartment(employeeId);
     }
-    public void deleteEmployee(Long id){
-        var employee = employeeRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ID: " + id));
+    public void deleteEmployee(Long employeeId){
+        var employee = getEmployee(employeeId);
         employeeRepo.delete(employee);
+    }
+
+    //pomo6ni funckii
+    private Employee getEmployee(Long employeeId) {
+        return employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new EntityNotFoundException("Employee ID: " + employeeId));
+    }
+    private Department getDepartment(Long departmentId) {
+        return departmentRepo.findById(departmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Department ID: " + departmentId));
+    }
+    private Employee saveEmployeeDtoToDatabase(EmployeeDTO employeeDTO, Long id) {
+        var employee = employeeMapper.convertDtoToEntity(employeeDTO, id);
+        return employeeRepo.saveAndFlush(employee);
     }
 }

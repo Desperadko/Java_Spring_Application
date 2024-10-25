@@ -1,5 +1,6 @@
 package org.example.Repositories;
 
+import jakarta.validation.constraints.NotNull;
 import org.example.Entities.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
 

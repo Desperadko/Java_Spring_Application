@@ -18,7 +18,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     //demek findEmployeeByEmployeeNum
     //si go basically razbira i prevru6ta w sql raven na
     //select e from Employee e where e.employeeNum = :num
-    boolean existsEmployeeByEmployeeNumber(Integer num);
+
     Optional<Employee> findEmployeeByEmployeeNumber(Integer num);
     Optional<List<Employee>> findEmployeesByDepartment(Department department);
     Optional<List<Employee>> findAllByIdIn(List<Long> Ids);
@@ -29,9 +29,15 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @Query(value = "UPDATE employees e SET e.department_id = :departmentId WHERE e.id = :employeeId", nativeQuery = true)
     void updateEmployeeDepartmentNative(Long employeeId, Long departmentId);
     @Modifying
+    @Query(value = "UPDATE Employee e SET e.department = :department WHERE e IN (:employees)")
+    void updateEmployeesDepartments(List<Employee> employees, Department department);
+    @Modifying
     @Query(value = "UPDATE Employee e SET e.department = null WHERE e.id = :employeeId")
     void removeEmployeeFromDepartment(Long employeeId);
     @Modifying
     @Query(value = "UPDATE Employee e SET e.department = null WHERE e.id = :employeeId AND e.department.id = :departmentId")
     int removeEmployeeFromDepartmentIfExists(Long employeeId, Long departmentId);
+    @Modifying
+    @Query(value = "UPDATE Employee e SET e.department = null WHERE e IN (:employees)")
+    void removeEmployeesFromTheirDepartment(List<Employee> employees);
 }

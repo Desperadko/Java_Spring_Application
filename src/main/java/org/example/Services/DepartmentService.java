@@ -26,68 +26,54 @@ public class DepartmentService {
 
     private final EmployeeRepository employeeRepo;
 
-    public List<Department> findAll(){
+    //department specific funkcii
+    public List<Department> findAllDepartments(){
         return departmentRepo.findAll();
     }
-    public Department findDepartmentById(Long id){
-        return departmentRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ID: " + id));
+    public Department findDepartmentById(Long departmentId){
+        return getDepartment(departmentId);
     }
-    public Department saveDepartment(DepartmentDTO dto){
-        Optional<Department> dbObject = departmentRepo.findDepartmentByName(dto.name());
-
-        Long id;
-        if(dbObject.isPresent()){
-            id = dbObject.get().getId();
-        }
-        else{
-            id = null;
+    public Department addDepartment(DepartmentDTO departmentDTO){
+        //prowerka dali department s dadenoto ime su6testwuwa
+        Optional<Department> dbObject = departmentRepo.findDepartmentByName(departmentDTO.name());
+        if(dbObject.isPresent()) {
+            throw new IllegalStateException("Department with name " + departmentDTO.name() + " is already present." +
+                    "Choose another name..");
         }
 
-        var department = departmentMapper.convertDtoToEntity(dto, id);
-        return departmentRepo.saveAndFlush(department);
+        //pri zadadena null stoinost za departmentId awtomati4no mu se zadawa ot tablicata
+        //tui kato sme go nastroili da e unique primary key, koito se auto incrementira
+        return saveDepartmentDtoToDatabase(departmentDTO, null);
     }
-    public Department updateDepartmentData(Long id, DepartmentDTO dto){
-        var department = departmentRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ID: " + id));
-        department = departmentMapper.convertDtoToEntity(dto, id);
-        return departmentRepo.saveAndFlush(department);
+    public Department updateDepartmentMetadata(Long departmentId, DepartmentDTO departmentDTO){
+        if(!departmentRepo.existsById(departmentId))
+            throw new EntityNotFoundException("Department ID: " + departmentId);
+        return saveDepartmentDtoToDatabase(departmentDTO, departmentId);
     }
-    public void deleteDepartment(Long id){
-        var department = departmentRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ID: " + id));
+    public void deleteDepartment(Long departmentId){
+        var department = getDepartment(departmentId);
+        var employees = getEmployeesFromDepartment(department);
 
-        var employees = employeeRepo.findEmployeesByDepartment(department)
-                .orElseThrow(() -> new EntityNotFoundException("Employees not found with department ID: " + department.getId()));
-
-        for(var employee : employees){
-            employee.setDepartment(null);
-            employeeRepo.save(employee);
-        }
-        employeeRepo.flush();
+        employeeRepo.removeEmployeesFromTheirDepartment(employees);
 
         departmentRepo.delete(department);
     }
-    public List<Employee> findEmployees(Long id){
-        var department = departmentRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Department ID: " + id));
 
-        return employeeRepo.findEmployeesByDepartment(department)
-                .orElseThrow(() -> new EntityNotFoundException("Employees not found with department ID: " + department.getId()));
+    //vklu4wa6ti i employees
+    public List<Employee> findEmployees(Long departmentId){
+        var department = getDepartment(departmentId);
+
+        return getEmployeesFromDepartment(department);
     }
-
     public void addEmployeeToDepartment(Long departmentId, Long employeeId) {
-        var department = departmentRepo.findById(departmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Department ID: " + departmentId));
+        var department = getDepartment(departmentId);
         employeeRepo.updateEmployeeDepartment(employeeId, department);
     }
     public void addEmployeeToDepartmentNative(Long departmentId, Long employeeId){
         employeeRepo.updateEmployeeDepartmentNative(employeeId, departmentId);
     }
-
     public Employee removeEmployeeFromDepartment(Long departmentId, Long employeeId) {
-        var employee = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new EntityNotFoundException("Employee ID: " + employeeId));
+        var employee = getEmployee(employeeId);
 
         int updatedRows = employeeRepo.removeEmployeeFromDepartmentIfExists(employeeId, departmentId);
         if (updatedRows == 0)
@@ -95,17 +81,11 @@ public class DepartmentService {
 
         return employeeRepo.saveAndFlush(employee);
     }
-
     public List<Employee> updateEmployeeListForDepartment(Long departmentId, List<Long> employeeList) {
-        var department = departmentRepo.findById(departmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Department ID: " + departmentId));
-        var currentEmployeesInDepartment = employeeRepo.findEmployeesByDepartment(department)
-                .orElseThrow(() -> new EntityNotFoundException("Employees not found with department ID: " + department.getId()));
+        var department = getDepartment(departmentId);
+        var currentEmployeesInDepartment = getEmployeesFromDepartment(department);
 
-        for(var employee : currentEmployeesInDepartment){
-            employee.setDepartment(null);
-            employeeRepo.save(employee);
-        }
+        employeeRepo.removeEmployeesFromTheirDepartment(currentEmployeesInDepartment);
 
         var employeesToAdd = employeeRepo.findAllByIdIn(employeeList)
                 .orElseThrow(() -> {
@@ -114,12 +94,27 @@ public class DepartmentService {
                             .collect(Collectors.joining(", "));
                     return new EntityNotFoundException("Couldn't find employees with the given IDs: " + employeeListToStr);
                 });
-        for(var employee : employeesToAdd){
-            employee.setDepartment(department);
-            employeeRepo.save(employee);
-        }
 
-        employeeRepo.flush();
+        employeeRepo.updateEmployeesDepartments(employeesToAdd, department);
+
         return employeesToAdd;
+    }
+
+    //pomo6ni funkcii
+    private Department saveDepartmentDtoToDatabase(DepartmentDTO departmentDTO, Long departmentId) {
+        var department = departmentMapper.convertDtoToEntity(departmentDTO, departmentId);
+        return departmentRepo.saveAndFlush(department);
+    }
+    private List<Employee> getEmployeesFromDepartment(Department department) {
+        return employeeRepo.findEmployeesByDepartment(department)
+                .orElseThrow(() -> new EntityNotFoundException("Employees not found with department ID: " + department.getId()));
+    }
+    private Department getDepartment(Long departmentId) {
+        return departmentRepo.findById(departmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Department ID: " + departmentId));
+    }
+    private Employee getEmployee(Long employeeId) {
+        return employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new EntityNotFoundException("Employee ID: " + employeeId));
     }
 }
