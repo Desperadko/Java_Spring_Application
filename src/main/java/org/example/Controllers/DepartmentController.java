@@ -5,6 +5,9 @@ import org.example.DTOs.DepartmentDTO;
 import org.example.Entities.Department;
 import org.example.Entities.Employee;
 import org.example.Services.DepartmentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +22,11 @@ public class DepartmentController {
 
     //department specific
     @GetMapping()
-    public ResponseEntity<List<Department>> getAllDepartments(){
-        var departments = departmentService.findAllDepartments();
+    public ResponseEntity<Page<Department>> getAllDepartments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+        var departments = departmentService.findAllDepartments(PageRequest.of(page, size));
         return new ResponseEntity<>(departments, HttpStatus.OK);
     }
     @GetMapping(value = "/{departmentId}")
@@ -46,8 +52,12 @@ public class DepartmentController {
 
     //vklu4wa6ti i employees
     @GetMapping(value = "{departmentId}/employees")
-    public ResponseEntity<List<Employee>> getEmployeesFromDepartment(@PathVariable Long departmentId){
-        var employees = departmentService.findEmployees(departmentId);
+    public ResponseEntity<Page<Employee>> getEmployeesFromDepartment(
+            @PathVariable Long departmentId,
+            @RequestParam(defaultValue = "0") int page,
+                @RequestParam(defaultValue = "10") int size
+    ){
+        var employees = departmentService.findEmployees(departmentId, PageRequest.of(page, size));
         return new ResponseEntity<>(employees, HttpStatus.OK);
     }
     @PostMapping(value = "/{departmentId}/employees/{employeeId}")

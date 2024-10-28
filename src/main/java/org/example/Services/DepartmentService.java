@@ -9,6 +9,8 @@ import org.example.Entities.Employee;
 import org.example.Mappers.DepartmentMapper;
 import org.example.Repositories.DepartmentRepository;
 import org.example.Repositories.EmployeeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -27,8 +29,8 @@ public class DepartmentService {
     private final EmployeeRepository employeeRepo;
 
     //department specific funkcii
-    public List<Department> findAllDepartments(){
-        return departmentRepo.findAll();
+    public Page<Department> findAllDepartments(Pageable pageable){
+        return departmentRepo.findAll(pageable);
     }
     public Department findDepartmentById(Long departmentId){
         return getDepartment(departmentId);
@@ -60,10 +62,10 @@ public class DepartmentService {
     }
 
     //vklu4wa6ti i employees
-    public List<Employee> findEmployees(Long departmentId){
+    public Page<Employee> findEmployees(Long departmentId, Pageable pageable){
         var department = getDepartment(departmentId);
 
-        return getEmployeesFromDepartment(department);
+        return getEmployeesFromDepartment(department, pageable);
     }
     public void addEmployeeToDepartment(Long departmentId, Long employeeId) {
         var department = getDepartment(departmentId);
@@ -108,6 +110,9 @@ public class DepartmentService {
     private List<Employee> getEmployeesFromDepartment(Department department) {
         return employeeRepo.findEmployeesByDepartment(department)
                 .orElseThrow(() -> new EntityNotFoundException("Employees not found with department ID: " + department.getId()));
+    }
+    private Page<Employee> getEmployeesFromDepartment(Department department, Pageable pageable){
+        return employeeRepo.findEmployeesByDepartment(department, pageable);
     }
     private Department getDepartment(Long departmentId) {
         return departmentRepo.findById(departmentId)

@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import org.example.Entities.Employee;
 import org.example.Services.EmployeeService;
 import org.example.DTOs.EmployeeDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +25,11 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     @GetMapping()
-    public ResponseEntity<List<Employee>> getAllEmployees(){
-        var employees = employeeService.findAll();
+    public ResponseEntity<Page<Employee>> getAllEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+        var employees = employeeService.findAll(PageRequest.of(page, size));
         return new ResponseEntity<>(employees, HttpStatus.OK);
     }
     @GetMapping(value = "/{employeeId}")

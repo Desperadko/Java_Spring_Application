@@ -2,6 +2,8 @@ package org.example.Repositories;
 
 import org.example.Entities.Department;
 import org.example.Entities.Employee;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,9 +21,12 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     //si go basically razbira i prevru6ta w sql raven na
     //select e from Employee e where e.employeeNum = :num
 
-    Optional<Employee> findEmployeeByEmployeeNumber(Integer num);
+    Page<Employee> findAll(Pageable pageable);
+    Optional<Employee> findEmployeeByEmployeeNumber(Integer employeeNumber);
     Optional<List<Employee>> findEmployeesByDepartment(Department department);
-    Optional<List<Employee>> findAllByIdIn(List<Long> Ids);
+    Optional<List<Employee>> findAllByIdIn(List<Long> employeeIds);
+    @Query(value = "SELECT e FROM Employee e WHERE e.department = :department")
+    Page<Employee> findEmployeesByDepartment(Department department, Pageable pageable);
     @Modifying
     @Query(value = "UPDATE Employee e SET e.department = :department WHERE e.id = :employeeId")
     void updateEmployeeDepartment(Long employeeId, Department department);

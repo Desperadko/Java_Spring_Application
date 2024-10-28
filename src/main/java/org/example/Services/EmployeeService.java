@@ -9,6 +9,8 @@ import org.example.Entities.Employee;
 import org.example.Mappers.EmployeeMapper;
 import org.example.Repositories.DepartmentRepository;
 import org.example.Repositories.EmployeeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,8 +29,8 @@ public class EmployeeService {
 
     private final DepartmentRepository departmentRepo;
 
-    public List<Employee> findAll(){
-        return employeeRepo.findAll();
+    public Page<Employee> findAll(Pageable pageable){
+        return employeeRepo.findAll(pageable);
     }
     public Employee getEmployeeById(Long employeeId){
         return getEmployee(employeeId);
