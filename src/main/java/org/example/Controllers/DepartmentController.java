@@ -7,7 +7,6 @@ import org.example.Entities.Employee;
 import org.example.Services.DepartmentService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,9 +54,9 @@ public class DepartmentController {
     public ResponseEntity<Page<Employee>> getEmployeesFromDepartment(
             @PathVariable Long departmentId,
             @RequestParam(defaultValue = "0") int page,
-                @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size
     ){
-        var employees = departmentService.findEmployees(departmentId, PageRequest.of(page, size));
+        var employees = departmentService.getEmployeesFromDepartment(departmentId, PageRequest.of(page, size));
         return new ResponseEntity<>(employees, HttpStatus.OK);
     }
     @PostMapping(value = "/{departmentId}/employees/{employeeId}")
@@ -66,13 +65,13 @@ public class DepartmentController {
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
     @PatchMapping(value = "/{departmentId}/employees")
-    public ResponseEntity<List<Employee>> updateEmployeeListForDepartment(@PathVariable Long departmentId, @RequestParam List<Long> employeeList){
-        var employees = departmentService.updateEmployeeListForDepartment(departmentId, employeeList);
+    public ResponseEntity<List<Employee>> updateEmployeeListForDepartment(@PathVariable Long departmentId, @RequestParam List<Long> employeeIds){
+        var employees = departmentService.updateEmployeeListForDepartment(departmentId, employeeIds);
         return new ResponseEntity<>(employees, HttpStatus.ACCEPTED);
     }
     @DeleteMapping(value = "/{departmentId}/employees/{employeeId}")
     public ResponseEntity<Employee> removeEmployeeFromDepartment(@PathVariable Long departmentId, @PathVariable Long employeeId){
-        var employee = departmentService.removeEmployeeFromDepartment(departmentId, employeeId);
-        return new ResponseEntity<>(employee, HttpStatus.ACCEPTED);
+        departmentService.removeEmployeeFromDepartment(departmentId, employeeId);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 }

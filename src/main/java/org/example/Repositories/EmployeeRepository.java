@@ -2,6 +2,7 @@ package org.example.Repositories;
 
 import org.example.Entities.Department;
 import org.example.Entities.Employee;
+import org.example.Entities.Project;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,11 +23,15 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     //select e from Employee e where e.employeeNum = :num
 
     Page<Employee> findAll(Pageable pageable);
+    Optional<List<Employee>> findAllByIdIn(List<Long> employeeIds);
     Optional<Employee> findEmployeeByEmployeeNumber(Integer employeeNumber);
     Optional<List<Employee>> findEmployeesByDepartment(Department department);
-    Optional<List<Employee>> findAllByIdIn(List<Long> employeeIds);
+    @Query(value = "SELECT e FROM Employee e JOIN e.projects p WHERE p = :project")
+    Optional<List<Employee>> findEmployeesByProject(Project project);
     @Query(value = "SELECT e FROM Employee e WHERE e.department = :department")
     Page<Employee> findEmployeesByDepartment(Department department, Pageable pageable);
+    @Query(value = "SELECT e FROM Employee e JOIN e.projects p WHERE p = :project")
+    Page<Employee> findEmployeesByProject(Project project, Pageable pageable);
     @Modifying
     @Query(value = "UPDATE Employee e SET e.department = :department WHERE e.id = :employeeId")
     void updateEmployeeDepartment(Long employeeId, Department department);

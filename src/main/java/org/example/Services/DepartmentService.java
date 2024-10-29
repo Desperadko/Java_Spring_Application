@@ -1,7 +1,7 @@
 package org.example.Services;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.DTOs.DepartmentDTO;
 import org.example.Entities.Department;
@@ -62,13 +62,14 @@ public class DepartmentService {
     }
 
     //vklu4wa6ti i employees
-    public Page<Employee> findEmployees(Long departmentId, Pageable pageable){
+    public Page<Employee> getEmployeesFromDepartment(Long departmentId, Pageable pageable){
         var department = getDepartment(departmentId);
 
         return getEmployeesFromDepartment(department, pageable);
     }
     public void addEmployeeToDepartment(Long departmentId, Long employeeId) {
         var department = getDepartment(departmentId);
+
         employeeRepo.updateEmployeeDepartment(employeeId, department);
     }
     public void addEmployeeToDepartmentNative(Long departmentId, Long employeeId){
@@ -83,19 +84,13 @@ public class DepartmentService {
 
         return employeeRepo.saveAndFlush(employee);
     }
-    public List<Employee> updateEmployeeListForDepartment(Long departmentId, List<Long> employeeList) {
+    public List<Employee> updateEmployeeListForDepartment(Long departmentId, List<Long> employeeIds) {
         var department = getDepartment(departmentId);
         var currentEmployeesInDepartment = getEmployeesFromDepartment(department);
 
         employeeRepo.removeEmployeesFromTheirDepartment(currentEmployeesInDepartment);
 
-        var employeesToAdd = employeeRepo.findAllByIdIn(employeeList)
-                .orElseThrow(() -> {
-                    String employeeListToStr = Arrays.stream(employeeList.toArray())
-                            .map(String::valueOf)
-                            .collect(Collectors.joining(", "));
-                    return new EntityNotFoundException("Couldn't find employees with the given IDs: " + employeeListToStr);
-                });
+        var employeesToAdd = getEmployeesFromListOfIds(employeeIds);
 
         employeeRepo.updateEmployeesDepartments(employeesToAdd, department);
 
@@ -105,6 +100,7 @@ public class DepartmentService {
     //pomo6ni funkcii
     private Department saveDepartmentDtoToDatabase(DepartmentDTO departmentDTO, Long departmentId) {
         var department = departmentMapper.convertDtoToEntity(departmentDTO, departmentId);
+
         return departmentRepo.saveAndFlush(department);
     }
     private List<Employee> getEmployeesFromDepartment(Department department) {
@@ -121,5 +117,14 @@ public class DepartmentService {
     private Employee getEmployee(Long employeeId) {
         return employeeRepo.findById(employeeId)
                 .orElseThrow(() -> new EntityNotFoundException("Employee ID: " + employeeId));
+    }
+    private List<Employee> getEmployeesFromListOfIds(List<Long> employeeIds) {
+        return employeeRepo.findAllByIdIn(employeeIds)
+                .orElseThrow(() -> {
+                    String employeeListToStr = Arrays.stream(employeeIds.toArray())
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(", "));
+                    return new EntityNotFoundException("Couldn't find employees with the given IDs: " + employeeListToStr);
+                });
     }
 }

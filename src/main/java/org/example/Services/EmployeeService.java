@@ -1,7 +1,7 @@
 package org.example.Services;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.DTOs.EmployeeDTO;
 import org.example.Entities.Department;
@@ -38,7 +38,7 @@ public class EmployeeService {
     public Employee addEmployee(EmployeeDTO employeeDTO){
         var employeeNumber = employeeDTO.employeeNumber();
 
-        Optional<Employee> dbObject = employeeRepo.findEmployeeByEmployeeNumber(employeeNumber);
+        var dbObject = employeeRepo.findEmployeeByEmployeeNumber(employeeNumber);
         if(dbObject.isPresent()){
             throw new IllegalStateException("Employee with employee number '" + employeeNumber + "' already exists. " +
                     "Check if you don't want to UPDATE said employee, otherwise choose another employee number.");

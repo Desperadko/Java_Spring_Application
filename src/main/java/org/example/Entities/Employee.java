@@ -2,7 +2,8 @@ package org.example.Entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
+
+import java.util.Set;
 
 @Data
 @Entity //kazwa che she e entity prawe6to tablica i wsqka instanciq na twa entity 6e e record w samata tablica
@@ -22,4 +23,12 @@ public class Employee {
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;
+
+    @ManyToMany
+    @JoinTable(
+            name = "employee_project",
+            joinColumns = @JoinColumn(name = "employee_id"),
+            inverseJoinColumns = @JoinColumn(name = "project_id")
+    )
+    private Set<Project> projects;
 }
